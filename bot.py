@@ -3,9 +3,13 @@ from discord import app_commands
 import json
 import os
 
-import os
-TOKEN = os.getenv("TOKEN")
+# ===== TOKEN (Railway Environment Variable) =====
+TOKEN = os.environ.get("TOKEN")
 
+if TOKEN is None:
+    raise RuntimeError("TOKEN non trouvé. Vérifie les variables Railway.")
+
+# ===== INTENTS =====
 intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
@@ -21,7 +25,7 @@ class MyBot(discord.Client):
 
 bot = MyBot()
 
-# ===== FILE POINTS =====
+# ===== FICHIER POINTS =====
 if not os.path.exists("points.json"):
     with open("points.json", "w") as f:
         json.dump({}, f)
@@ -44,9 +48,9 @@ async def on_ready():
 async def on_member_join(member):
     channel = discord.utils.get(member.guild.text_channels, name="général")
     if channel:
-        await channel.send(f"Bienvenue {member.mention} 🚀 Clique sur le bouton dans #validation pour accéder au serveur.")
+        await channel.send(f"Bienvenue {member.mention} 🚀 Clique sur le bouton dans #validation pour accéder.")
 
-# ===== ANTI LIEN =====
+# ===== ANTI-LIEN =====
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -63,12 +67,15 @@ class ValidationView(discord.ui.View):
         role = discord.utils.get(interaction.guild.roles, name="Membre")
         if role:
             await interaction.user.add_roles(role)
-            await interaction.response.send_message("✅ Tu as accès au serveur !", ephemeral=True)
+            await interaction.response.send_message("✅ Accès accordé !", ephemeral=True)
 
 @bot.tree.command(name="setup_validation", description="Créer le message de validation")
 @app_commands.checks.has_permissions(administrator=True)
 async def setup_validation(interaction: discord.Interaction):
-    embed = discord.Embed(title="Validation", description="Clique sur le bouton pour accéder au serveur.")
+    embed = discord.Embed(
+        title="Validation",
+        description="Clique sur le bouton pour accéder au serveur."
+    )
     await interaction.response.send_message(embed=embed, view=ValidationView())
 
 # ===== /game =====
@@ -129,4 +136,5 @@ async def on_voice_state_update(member, before, after):
         if len(before.channel.members) == 0:
             await before.channel.delete()
 
+# ===== LANCEMENT =====
 bot.run(TOKEN)
