@@ -1,39 +1,28 @@
 import discord
-from discord import app_commands
-import json
+from discord.ext import commands
 import os
-from dotenv import load_dotenv
-import os
-print("ENVIRONMENT VARIABLES")
-print(os.environ)
-
-# Charger fichier .env
-load_dotenv()
-
-TOKEN = os.getenv("DISCORD_TOKEN")
-
-if not TOKEN:
-    raise RuntimeError("DISCORD_TOKEN introuvable.")
 
 intents = discord.Intents.default()
-intents.members = True
 intents.message_content = True
-intents.voice_states = True
 
-class MyBot(discord.Client):
-    def __init__(self):
-        super().__init__(intents=intents)
-        self.tree = app_commands.CommandTree(self)
+bot = commands.Bot(command_prefix="!", intents=intents)
 
-    async def setup_hook(self):
-        await self.tree.sync()
+# Récupération du token Railway
+TOKEN = os.environ.get("DISCORD_TOKEN")
 
-bot = MyBot()
+if TOKEN is None:
+    raise RuntimeError("DISCORD_TOKEN introuvable.")
 
 @bot.event
 async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
 
+@bot.command()
+async def ping(ctx):
+    await ctx.send("🏓 Pong !")
+
+@bot.command()
+async def code(ctx, *, message):
+    await ctx.send(f"🎮 Code de partie : {message}")
+
 bot.run(TOKEN)
-
-
