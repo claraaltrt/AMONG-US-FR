@@ -5,7 +5,7 @@ import os
 from dotenv import load_dotenv
 import os
 print("ENVIRONMENT VARIABLES")
-print(os.envirion)
+print(os.environ)
 
 # Charger fichier .env
 load_dotenv()
@@ -35,4 +35,5 @@ async def on_ready():
     print(f"✅ Connecté en tant que {bot.user}")
 
 bot.run(TOKEN)
+
 
