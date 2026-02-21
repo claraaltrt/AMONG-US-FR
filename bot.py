@@ -3,11 +3,11 @@ from discord import app_commands
 import json
 import os
 
-# ===== TOKEN (Railway Environment Variable) =====
-TOKEN = os.environ.get("TOKEN")
+# ===== TOKEN VIA RAILWAY =====
+TOKEN = os.environ.get("DISCORD_TOKEN")
 
-if TOKEN is None:
-    raise RuntimeError("TOKEN non trouvé. Vérifie les variables Railway.")
+if not TOKEN:
+    raise RuntimeError("DISCORD_TOKEN non trouvé. Vérifie les variables Railway.")
 
 # ===== INTENTS =====
 intents = discord.Intents.default()
@@ -38,19 +38,21 @@ def save_points(data):
     with open("points.json", "w") as f:
         json.dump(data, f, indent=4)
 
-# ===== READY =====
+# ===== BOT READY =====
 @bot.event
 async def on_ready():
     print(f"✅ Bot connecté en tant que {bot.user}")
 
-# ===== WELCOME =====
+# ===== MESSAGE DE BIENVENUE =====
 @bot.event
 async def on_member_join(member):
     channel = discord.utils.get(member.guild.text_channels, name="général")
     if channel:
-        await channel.send(f"Bienvenue {member.mention} 🚀 Clique sur le bouton dans #validation pour accéder.")
+        await channel.send(
+            f"Bienvenue {member.mention} 🚀 Clique sur le bouton dans #validation pour accéder."
+        )
 
-# ===== ANTI-LIEN =====
+# ===== ANTI LIEN =====
 @bot.event
 async def on_message(message):
     if message.author.bot:
@@ -58,16 +60,20 @@ async def on_message(message):
 
     if "http" in message.content:
         await message.delete()
-        await message.channel.send(f"{message.author.mention} 🚫 Les liens sont interdits.")
+        await message.channel.send(
+            f"{message.author.mention} 🚫 Les liens sont interdits."
+        )
 
-# ===== VALIDATION BUTTON =====
+# ===== VALIDATION PAR BOUTON =====
 class ValidationView(discord.ui.View):
     @discord.ui.button(label="Valider", style=discord.ButtonStyle.green)
     async def validate(self, interaction: discord.Interaction, button: discord.ui.Button):
         role = discord.utils.get(interaction.guild.roles, name="Membre")
         if role:
             await interaction.user.add_roles(role)
-            await interaction.response.send_message("✅ Accès accordé !", ephemeral=True)
+            await interaction.response.send_message(
+                "✅ Accès accordé !", ephemeral=True
+            )
 
 @bot.tree.command(name="setup_validation", description="Créer le message de validation")
 @app_commands.checks.has_permissions(administrator=True)
@@ -85,6 +91,7 @@ async def game(interaction: discord.Interaction):
     user = str(interaction.user.id)
     data[user] = data.get(user, 0) + 1
     save_points(data)
+
     await interaction.response.send_message("🚀 Game lancée ! +1 point")
 
 # ===== /win =====
@@ -95,13 +102,17 @@ async def win(interaction: discord.Interaction, member: discord.Member):
     user = str(member.id)
     data[user] = data.get(user, 0) + 5
     save_points(data)
-    await interaction.response.send_message(f"🏆 {member.mention} gagne +5 points !")
+
+    await interaction.response.send_message(
+        f"🏆 {member.mention} gagne +5 points !"
+    )
 
 # ===== /points =====
 @bot.tree.command(name="points", description="Voir tes points")
 async def points(interaction: discord.Interaction):
     data = load_points()
     pts = data.get(str(interaction.user.id), 0)
+
     await interaction.response.send_message(f"🎯 Tu as {pts} points.")
 
 # ===== /leaderboard =====
